@@ -12,7 +12,7 @@ github_repo: "https://github.com/ckdgit/ckdgit.github.io.git" # you code reposit
 # Sidebar settings
 sidebar: true                           # whether or not using Sidebar.
 sidebar-about-description: "nanananaana"
-sidebar-avatar: /img/avatar-ck.JPG      # use absolute URL, seeing it's used in both `/` and `/about/`
+sidebar-avatar: /img/avatar-ck.jpg      # use absolute URL, seeing it's used in both `/` and `/about/`
 
 
 

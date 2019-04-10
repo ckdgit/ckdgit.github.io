@@ -1,228 +1,466 @@
 ---
 layout:     post
-title:      first blog
-subtitle:   值得纪念的一刻
-date:       2019-04-010
+title:      iOS手势与变形
+subtitle:   手势与变形基础知识笔记
+date:       2016-10-10
 author:     BY
-header-img: img/post-bg-cook.jpg
+header-img: img/post-bg-ios9-web.jpg
 catalog: true
 tags:
     - iOS
+    - iOS开发基础
 ---
 
-## 前言
+>手势在用户交互中有着举足轻重的作用，这篇文字简单的介绍了iOS中的手势，并通过手势对控件进行变形处理。
 
-一年一度的 WWDC（苹果全球开发者大会）于北京时间 6月5日 凌晨1点开幕。废话不多说，来看看这次WWDC 都有哪些亮点吧!
+# 手势
 
+iOS手势分为下面这几种：
 
-## iOS 12 和 ARKit 2.0
+- UITapGestureRecognizer（点按）
+- UIPanGestureRecognizer（拖动）
+- UIScreenEdgePanGestureRecognizer (边缘拖动)
+- UIPinchGestureRecognizer（捏合）
+- UIRotationGestureRecognizer（旋转）
+- UILongPressGestureRecognizer（长按）
+- ​UISwipeGestureRecognizer（轻扫）
 
->关键词：官方防沉迷最为致命
 
-### iOS 12 
 
-iOS 12 相较于 iOS 11 并没有太多UI上的变动，刚更新完 bate 版本的 iOS 12，完全感觉不到这是个新系统。
+这些手势大都继承于**UIGestureRecognizer**类，（`UIScreenEdgePanGestureRecognizer`继承于`UIPanGestureRecognizer`类）,
 
-iOS 12 主要是对安全和性能的优化，iOS 12 在旧设备上的运行速度比 iOS 11更块，程序加载速度快了一倍。（PS：看来苹果并没有放弃旧设备）
+需要说明的是这些手势只有一个是**离散型手势**，那就是`UITapGestureRecognizer`，一旦识别就无法取消，而且只会调用一次手势操作事件。
 
-![](https://cdn.mos.cms.futurecdn.net/RdxhPVv8fAyM6oHsRgF6dH-650-80.png)
+换句话说其他手势是**连续型手势**，而连续型手势的特点就是：会多次调用手势操作事件，而且在连续手势识别后可以取消手势。
 
-### ARKit 2.0 
+从下图可以看出两者调用操作事件的次数是不同的：
 
-Apple 与 皮克斯 合作开发了一种用于共享AR内容的新文件格式，新的 AR 格式名为 USDZ。
+![](http://ww3.sinaimg.cn/large/006tNc79gw1fb0neee6mlj30dw0aldgf.jpg)
 
-作为一个含着金苹果出生的新生儿，USDZ 一开始就得到了 Adobe Creative Cloud （包括 Photoshop CC、InDesign CC、Illustrator CC、Dreamweaver CC、Premiere Pro CC）套件的支持。
+这些手势类有着以下共同的方法:
 
-![](https://images.ifanr.cn/wp-content/uploads/2018/06/WWDC-10.jpg)
 
-同时，面向开发者的开发套件 ARKit 则升级到了二代，主要提升了面部跟踪、渲染能力、3D 探测和共享体验等能力。
+创建方法：
 
-随后展示了一款名为 Measure 的 App，可使用AR查看物品大小。
+```
+- (instancetype)initWithTarget:(nullable id)target action:(nullable SEL)action;
+```
 
-![](https://cdn.mos.cms.futurecdn.net/4tbGCxGUGsH9VwSLsfMDK5-650-80.png)
+移除方法：
 
-最后为了演示新的 AR 能力和效果，苹果请来了乐高的创意总监来捧场。这是一个真实的乐高积木建筑物为基础，最多四个人可以用苹果 AR 应用进行游戏，可以在真实环境中模拟出各种虚拟的形象和建筑。
+```
+- (void)removeTarget:(nullable id)target action:(nullable SEL)action;
+```
 
-![](https://images.ifanr.cn/wp-content/uploads/2018/06/WWDC-9.jpg)
-![](https://images.ifanr.cn/wp-content/uploads/2018/06/WWDC-11.jpg)
+添加事件：
 
-### 相册优化
+```
+- (void)addTarget:(id)target action:(SEL)action;
+```
 
-iOS 12 的相册将大大提升搜索性能，系统不仅会提出搜索建议，还会帮你按主题整理照片。
+还有下面这些属性等：
 
-![](https://images.ifanr.cn/wp-content/uploads/2018/06/WWDC-13.jpg)
+```
+@property(nonatomic,readonly) UIGestureRecognizerState state;// 手势状态
 
-![](https://images.ifanr.cn/wp-content/uploads/2018/06/WWDC-14.jpg)
+typedef NS_ENUM(NSInteger, UIGestureRecognizerState) {
+     UIGestureRecognizerStatePossible,   // 尚未识别是何种手势操作（但可能已经触发了触摸事件），默认状态
+     UIGestureRecognizerStateBegan,      // 手势已经开始，此时已经被识别，但是这个过程中可能发生变化，手势操作尚未完成
+     UIGestureRecognizerStateChanged,    // 手势状态发生转变
+     UIGestureRecognizerStateEnded,      // 手势识别操作完成（此时已经松开手指）
+     UIGestureRecognizerStateCancelled,  // 手势被取消，恢复到默认状态
+     UIGestureRecognizerStateFailed,     // 手势识别失败，恢复到默认状态
+     UIGestureRecognizerStateRecognized = UIGestureRecognizerStateEnded // 手势识别完成，同UIGestureRecognizerStateEnded
+ };
 
-### Siri变得更聪明
+@property(nullable,nonatomic,weak) id <UIGestureRecognizerDelegate> delegate; // 代理
 
-iOS 12 中，苹果为 Siri 提供了更加高效的操作，让它可以操作各个应用内部的功能，并且能在锁屏界面建议用户下一步的行动。
+@property(nonatomic, getter=isEnabled) BOOL enabled; 
+```
 
-苹果还发布了一款名为「Shortcuts」的应用，它允许用户自定义 Siri 搜索指令，支持通过拖拽来快速编辑指令，同时还提供了一个指令库供用户下载现成的命令，就像是为 Siri 打造的 Workflow 自动化工具。
+当然我们也可以自定义手势来实现特殊的需求，关于自定义手势可以看[这篇博客](http://blog.csdn.net/mmoaay/article/details/47355709).
 
-![](https://cdn.sspai.com/2018-06-04-Artboard.jpg?imageView2/2/w/1120/q/90/interlace/1/ignore-error/1)
+接下来我们来看看这些常用手势的用法.
 
-看到这里，相比熟悉苹果的朋友大概明白了，Siri 的本次改进，很可能是源于它收购的效率神器 Workflow，堪称一个用 Siri 唤醒的 Workflow。
+#### UITapGestureRecognizer（点按）
 
-### 原生应用大更新
+Tap手势有两个属性，
 
-iOS 12 中，不少原生应用都得到了更新。
+- numberOfTapsRequired
+- numberOfTouchesRequired：
 
-- iBooks 更名为 **Apple Books**，采用类似 App Store 的新界面设计。
-- 新闻应用（News）在 iPad 上新添加了侧边栏，方便浏览，也突出策划内容。
-- 语音备忘录现在支持 iCloud 了
-- 股市的界面重构，可以看到股票全天走势，并打通 News 应用，方便看财经新闻；
+`numberOfTapsRequired`为触发事件需要点击的次数，默认是1；
 
-### CarPlay 开放了
+`numberOfTouchesRequired`为触发事件需要的几个手指点按，默认是1；
 
-![](https://images.ifanr.cn/wp-content/uploads/2018/06/WWDC-21.jpg)
+若都设置为2，就需要`两个`手指同时点按`2次`才会触发事件。
 
-CarPlay 变得更加开放了，曾经被苹果狠心抛弃的 Google Maps 和 Google 的干儿子地图 Waze，以及来自东方的神秘力量高德地图成为首批 CarPlay 支持的第三方导航，从此“志玲姐姐为您导航”将可以常伴林肯领航者车主左右，中国梦和美国梦一起实现。
+Tap手势也是我们最常用的手势之一, 比如点击ImageView跳转到其他界面，或者双击图片放大缩小等。
 
-### 防手机沉迷 - 划重点！
+创建：
 
-本次 iOS 12 的重点就是：**防沉迷！**
+```
+	UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(tap:)];
+    tap.numberOfTapsRequired = 2;
+    tap.numberOfTouchesRequired = 1;
+    [self.imageView addGestureRecognizer:tap];
+```
 
-![](https://images.ifanr.cn/wp-content/uploads/2018/06/WWDC-25.jpg)
+#### UIPanGestureRecognizer（拖动）
 
-鉴于手机上瘾成为了一个社会议题，今年 Google 和苹果都不约而同地将“防沉迷”加入到了系统更新当中：
+Pan手势的属性和方法：
 
-- **Do Not Disturb（别吵我）**功能将关掉手机的视觉通知，在夜深人静想起她或梦见她的时候，来了邮件也不会亮屏刺破夜的静谧和黑暗
-- Deliver Quietly（安静通知）则是将消息推送静默化、不显示在锁屏，也不出声，也不会在 app 右上角标红
-- **Grouped Notifications（分组通知**）可以将某一类型的通知归组，微信群聊消息不再有轰炸的感觉
-- **Reports（应用报告）**可以用周报告的形式，告诉用户用什么应用最多，哪个应用通知最多，每天起床第一个打开的是什么应用等等
-- **App Limits（应用限制**）可以给某个应用规定使用时间，当然这不是强制性的，用户可以突破限制继续“吃鸡”
-- **Allowances（零用钱？）** 是家长限制孩子使用应用的新特性
+- @property (nonatomic)          NSUInteger minimumNumberOfTouches __TVOS_PROHIBITED;
+- @property (nonatomic)          NSUInteger minimumNumberOfTouches __TVOS_PROHIBITED;
+- \-(CGPoint)translationInView:(nullable UIView *)view;
+- \-(void)setTranslation:(CGPoint)translation inView:(nullable UIView *)view;
+- \-(CGPoint)velocityInView:(nullable UIView *)view; 
 
-### iMessage 和 FeacTime
+`translationInView:`方法获取`View`的偏移量；
 
-Animoji 新增了 4 个新表情（幽灵，考拉，老虎和霸王龙），用户还可以为自己量身定做 Animoji ，并用到各种场景——这就是全新的 Memoji 技术
+`setTranslation:`方法设置手势的偏移量；
 
-![](https://images.ifanr.cn/wp-content/uploads/2018/06/WWDC-26.jpg)
+`velocityInView:`方法获取速度；
 
-![](https://cdn.sspai.com/2018/06/05/67b6fba3d36bdd7caf09bec94dcb157b.jpg?imageView2/2/w/1120/q/90/interlace/1/ignore-error/1)
+所以手势的创建方法都类似，这里就不在一一列举了。
 
-iOS 版 **FaceTime** 迎来了群聊功能，最多支持 32 人同时聊天，成员可以随时加入或离开聊天。聊天界面用瀑布流的形式呈现，正在说话的成员窗口会自动放大。macOS 版 FaceTime 同样也得到了更新。
 
-![](https://cdn.sspai.com/2018-06-04-Screen%20Shot%202018-06-05%20at%202.00.58%20AM.png?imageView2/2/w/1120/q/90/interlace/1/ignore-error/1)
+#### UIScreenEdgePanGestureRecognizer (边缘拖动)
 
-## tvOS
+ScreenEdgePan继承于`UIPanGestureRecognizer`，在屏幕边缘滑动才会触发
 
-> 关键词：优化试听体验
+- @property (readwrite, nonatomic, assign) UIRectEdge edges;
 
-tvOS 今年的变化比较小，更新主要集中在了影视资源以及细节优化上。
+`edges`为指定边缘拖动触发的边，是一个枚举：
 
-Apple TV 4K 将支持杜比全景声和杜比视界，让你在家里也能获得电影院般的听觉体验。
+```
+typedef NS_OPTIONS(NSUInteger, UIRectEdge) {
+    UIRectEdgeNone   = 0,
+    UIRectEdgeTop    = 1 << 0,
+    UIRectEdgeLeft   = 1 << 1,
+    UIRectEdgeBottom = 1 << 2,
+    UIRectEdgeRight  = 1 << 3,
+    UIRectEdgeAll    = UIRectEdgeTop | UIRectEdgeLeft | UIRectEdgeBottom | UIRectEdgeRight
+} NS_ENUM_AVAILABLE_IOS(7_0);
+```
+其他方法和Tap手势一致，主要用于像左右抽屉视图的变换等处理。
 
-![](https://cdn.sspai.com/2018-06-04-Screen%20Shot%202018-06-05%20at%202.26.21%20AM.png?imageView2/2/w/1120/q/90/interlace/1/ignore-error/1)
 
-## watchOS 5
+#### UIPinchGestureRecognizer（捏合）
+Pinch手势有两个属性：
 
-> 关键词：运动进行到底
+- @property (nonatomic)          CGFloat scale;              
+- @property (nonatomic,readonly) CGFloat velocity; 
 
-随着 Apple Watch 成长的，还有它的操作系统 watchOS，这一次 watchOS 升级到了第五代。
+`scale`：捏合比例
 
+`velocity`:捏合速度 = `scale/second`
 
-![](https://images.ifanr.cn/wp-content/uploads/2018/06/WWDC-31.jpg)
+#### UIRotationGestureRecognizer（旋转）
+Rotation手势和Pinch手势类似，同样有两个手势：
 
-Apple Watch 的功能朝着运动的方向发展，此次 watchOS 5 的更新，也以运动为主。
+- @property (nonatomic)          CGFloat rotation;            
+- @property (nonatomic,readonly) CGFloat velocity;
 
-![](https://images.ifanr.cn/wp-content/uploads/2018/06/WWDC-35.jpg)
+`rotation`:旋转弧度，注意，这里的单位是**弧度**
 
-watchOS 5 的一个小惊喜是让 Apple Watch 成为了对讲机，这个应用名为 Walkie Talkie（对讲机）。
+`velocity`:旋转速度
 
-![](https://images.ifanr.cn/wp-content/uploads/2018/06/WWDC-38.jpg)
+#### UILongPressGestureRecognizer（长按）
 
+LongPress的属性：
 
-Apple Watch 早就支持了 Apple Pay，不过在通知上，Apple Watch 显然可以做得更多，比如值机和给滴滴师傅付款评分，手表不再只是个通知器，也能做些轻交互。
+- @property (nonatomic) NSUInteger numberOfTapsRequired;      // Default is 0. 
+- @property (nonatomic) NSUInteger numberOfTouchesRequired __TVOS_PROHIBITED;   // Default is 1. 
+- @property (nonatomic) CFTimeInterval minimumPressDuration; 
+-  @property (nonatomic) CGFloat allowableMovement;
 
-![](https://images.ifanr.cn/wp-content/uploads/2018/06/WWDC-51.jpg)
+`numberOfTapsRequired`和`numberOfTouchesRequired`和Tap手势类似，都是指定触发需要的点击次数和手指数量，但是LongPress手势的`numberOfTapsRequired`是指定长按前需要点击的次数。
 
-还有 Apple Watch 可以浏览网页了~
+`minimumPressDuration`:触发时间
 
-## macOS Mojave
+`allowableMovement`:允许长按时间触发前允许手指滑动的范围。若是你在长按时手指移动，该长按手势将会失败，`allowableMovement`设置你能容忍的滑动范围，默认是10.
 
-> 关键词：夜间模式、全新的App Store
+# 变形
+---
+iOS的变形指的是图片的旋转、平移和缩放。这些变形可以和上面介绍的手势结合，完成许多变形操作。
 
-![](https://cdn.sspai.com/2018-06-04-macOS01.png?imageView2/2/w/1120/q/90/interlace/1/ignore-error/1)
+说变形前我们来看看**CGAffineTransform**，**CGAffineTransform**为一个结构体：
 
-对于大多数人来说，macOS 更新最大的悬念，是新系统叫什么名字。
+```
+struct CGAffineTransform {
+    CGFloat a, b, c, d;
+    CGFloat tx, ty;
+};
+```
+我们输出一个控件的`transform`看看
 
-答案是：**macOS Mojave**，Mojave 中译名是莫哈韦沙漠，位于在美国加利福尼亚西南，出于洛杉矶和拉斯维加斯之间。
+```
+NSLog(@"%@", NSStringFromCGAffineTransform(self.label.transform));
+```
 
-在 Mojave 这版系统中，苹果加入了一套适应暗光环境下使用的夜间主题，并对 Mac App Store 的交互界面进行了重塑，整个系统的改变甚至连库克都称为是苹果的一次 “巨大的跨越”。
+输出
 
-![](https://images.ifanr.cn/wp-content/uploads/2018/06/WWDC-89.jpg)
+```
+2016-12-22 17:01:19.211 手势[6489:1481987] [1, 0, 0, 1, 0, 0]
+```
 
-### 夜间模式 / 动态桌面
+我们可以看到输出了一个长度为6的数组：`[1, 0, 0, 1, 0, 0]`，并且我们可以猜测对应结构体中的`[a, b, c, d, tx, ty]`，并且默认的`transform`值就是`[1, 0, 0, 1, 0, 0]`。
 
-不少用户会在暗光环境下使用电脑，即便是将屏幕亮度调到最低，也难免会因为白底色为主的主题而感到刺眼。在这次更新中，macOS Mojave 新增加了一套暗色主题，不同于目前将菜单和程序栏调成暗色的选项，新系统上的是一套全局暗色主题，即便是在文件夹、应用里都是以黑色为主色呈现。
+想进一步了解可以看这篇[《iOS CGAffineTransform详解》](http://blog.csdn.net/ashiyanshi/article/details/48160429)
 
-![](https://images.ifanr.cn/wp-content/uploads/2018/06/WWDC-63.jpg)
+对iOS控件进行变形实际就是对控件`transform`属性进行操作。
 
-另外，系统可根据时间变化对桌面进行自动调整，日间使用时系统为正常主题；夜间使用时系统则自动切换至暗色模式主题。此时，台下的开发者们爆发出了一阵欢呼，大概是这个主题能够提升程序员朋友夜间加班的幸福感吧。
+但是我们使用中，使用已经封装好的的API对控件进行变形处理。分别是：
 
-![](https://images.ifanr.cn/wp-content/uploads/2018/06/WWDC-63.jpg)
 
-### 智能分类
+- CGAffineTransformScale()
+- CGAffineTransformTranslate()
+- CGAffineTransformRotate()
 
-macOS 会跟据文件类型和标签对桌面的文件进行自动分类整理，从此再也不用担心满桌面都是文件了。
+和：
 
-![](https://images.ifanr.cn/wp-content/uploads/2018/06/WWDC-82.jpg)
+- CGAffineTransformMakeScale（）
+- CGAffineTransformMakeTranslate()
+- CGAffineTransformMakeRotate()
 
-![](https://cdn.sspai.com/2018-06-04-macOS04.png?imageView2/2/w/1120/q/90/interlace/1/ignore-error/1)
+这些API都是对设置`CGAffineTransform`的一个封装，针对`[a, b, c, d, tx, ty]`中不同的位置进行操作。
 
-### 快速查看升级
 
-![](https://images.ifanr.cn/wp-content/uploads/2018/06/WWDC-92.jpg)
+下面我们在ViewController创建一个`UILabel`控件。然后对它进行变形操作。
 
-访达在这次系统上的更新并不多，只是针对图片查看增添了 “图库视图” 功能。通过 “图库视图”，用户可更加便捷快速地浏览到访达文件夹内的图片内容，与此同时功能内部也内置了图片元数据显示窗，用户可以借助数据窗口了解到图片的相关详情，并且可对图片进行快速编辑操作。
+![](http://ww4.sinaimg.cn/large/006tNc79jw1fazplz4mvmj306x0cbt8m.jpg)
 
-### 截图/录屏操作 - 类似iOS
+#### 缩放
 
-![](https://images.ifanr.cn/wp-content/uploads/2018/06/WWDC-93.jpg)
+首先来看一个缩放操作
 
-此次 macOS Mojave 加入了 “系统级” 的截屏功能，用户也可以在截屏后对截屏图片进行简单的标记。不过实际上，目前不少社交软件其实都已经具备了截图 + 标记的相关功能，且在体验上也相当不错。
+```
+// 缩放到90%（相对）
+self.label.transform = CGAffineTransformScale(self.label.transform, 0.9, 0.9);
+    
+NSLog(@"%@", NSStringFromCGAffineTransform( self.label.transform));
 
-### 安全权限
+```
 
-当我们在 iOS 系统上打开刚下载的应用程序时，系统会弹出弹窗，提示是否允许程序访问用户信息和手机硬件。而这次苹果也将相关的安全控制策略从 iOS “搬” 到了 macOS 上，当用户打开某个网址或程序时，系统会弹出 “是否允许访问” 的弹窗以获得用户批准。这也可能是为了呼应最近越发严格的隐私政策。
+输出：
 
-### 在 macOS 上运行的几款 iOS 程序
+```
+2016-12-22 17:26:25.074 手势[6526:1564064] [0.90000000000000002, 0, 0, 0.90000000000000002, 0, 0]
+2016-12-22 17:26:26.096 手势[6526:1564064] [0.81000000000000005, 0, 0, 0.81000000000000005, 0, 0]
+2016-12-22 17:26:26.963 手势[6526:1564064] [0.72900000000000009, 0, 0, 0.72900000000000009, 0, 0]
+2016-12-22 17:26:28.830 手势[6526:1564064] [0.65610000000000013, 0, 0, 0.65610000000000013, 0, 0]
+```
 
-![](https://images.ifanr.cn/wp-content/uploads/2018/06/WWDC-84.jpg)
+我们再看看另一个缩放：
 
-将 iOS 的应用程序搬到 macOS 上运行是不少玩家曾经有过的想法。此次苹果在新版的 macOS 系统上加入了 iOS 端的新闻、股市、家、语音备忘录四个程序，用户可以在桌面系统上通过这几款应用阅读新闻、控制家庭设备等等。
+```
+self.label.transform = CGAffineTransformMakeScale(0.9, 0.9);
 
-在发布会的最后，苹果否认了将对 iOS 和 macOS 进行合并的传闻，但考虑到 iOS 平台有非常庞大的应用数量，他们也希望其中的部分应用能来到 macOS。于是苹果在发布会上为大家提前预览了一个准备多年的项目，macOS 将可以使用 iOS 的 UIKit 框架进行开发，以降低开发多平台应用的成本。
+NSLog(@"%@", NSStringFromCGAffineTransform( self.label.transform));
+```
 
-![](https://cdn.sspai.com/2018-06-04-Screen%20Shot%202018-06-05%20at%203.08.05%20AM.png?imageView2/2/w/1120/q/90/interlace/1/ignore-error/1)
+输出
 
-比如这次 macOS Mojave 中新增的 4 款应用——News、股票、语音备忘录、家庭——均采用了这种新技术。
+```
+2016-12-22 17:32:32.972 手势[6581:1600236] [0.90000000000000002, 0, 0, 0.90000000000000002, 0, 0]
+2016-12-22 17:32:34.164 手势[6581:1600236] [0.90000000000000002, 0, 0, 0.90000000000000002, 0, 0]
+2016-12-22 17:32:35.246 手势[6581:1600236] [0.90000000000000002, 0, 0, 0.90000000000000002, 0, 0]
+```
 
-### 全新的 Mac App Store
+对比可以发现`CGAffineTransformScale()`与`CGAffineTransformMakeScale()`的区别在于，`CGAffineTransformScale()`实在原理的基础上在进行缩放操作，而`CGAffineTransformMakeScale()`直接将缩放值设定为0.9不变了。
 
-![](https://cdn.sspai.com/2018-06-04-macOS09.jpg?imageView2/2/w/1120/q/90/interlace/1/ignore-error/1)
+缩放操作变动的是构体中`[a, b, c, d, tx, ty]`的`a`和`d`，值和变形系数`Scale`是相对应的，大于1是放大，小于1是缩小。。
 
-在 iOS 11 对 Mac App Store 进行了重新设计后，macOS Mojave 也迎来了全新设计的 Mac App Store。新版拥有与 iOS 上 App Store 类似的发现页，里面能看到每日编辑推荐和一些 App 的使用技巧。进入 App 页面后，你可以看到视频预览和与 iOS 类似的评分系统。为了方便用户评分，新版 macOS 还加入了和 iOS 一样的 App 内打分功能。此外，苹果还宣布包括 Office 365 和 Adobe Lightroom CC 在内的一批重量级 App 将在今年稍后登录 Mac App Store。
+`a`是横向缩放， `d`是纵向缩放。
 
-## 结语
+#### 平移
 
-是的，这次的 WWDC 只有软件，没有新的电子设备发布，没有新 iPad Pro、没有 iPhone SE2、没有带八代酷睿的新 MacBook，唯一能和“硬件”沾上边的就是一个新的彩虹表带。
+先来看一个平移操作：
 
-![](https://images.ifanr.cn/wp-content/uploads/2018/06/WWDC-56.jpg)
+```
+self.label.transform = CGAffineTransformTranslate(self.label.transform, 10, 10);
+    NSLog(@"%@", NSStringFromCGAffineTransform( self.label.transform));
+```
+输出
 
-时至今日，苹果生态已经日趋完善了，大概苹果的产品经理们也想不出什么石破天惊的功能让大家 wow 一声了，有的只是细节层面的改进。作为看客和用户，也只能接受这样的现实了。
+```
+2016-12-22 17:40:38.568 手势[6608:1631232] [1, 0, 0, 1, 10, 10]
+2016-12-22 17:40:40.833 手势[6608:1631232] [1, 0, 0, 1, 20, 20]
+2016-12-22 17:40:41.834 手势[6608:1631232] [1, 0, 0, 1, 30, 30]
+2016-12-22 17:40:42.532 手势[6608:1631232] [1, 0, 0, 1, 40, 40]
+2016-12-22 17:40:43.162 手势[6608:1631232] [1, 0, 0, 1, 50, 50]
+```
 
-对了，那个可以四个人一起玩的乐高积木和 AR 应用，倒是可以考虑买来玩一下，不要一边说没有新东西，一边又对新东西视而不见。
+我们可以看到label往右下角移动
 
-对于 iOS 开发者来说，macOS 将可以使用 iOS 的 UIKit 框架进行开发是一个值得关注的点。
+![](http://ww1.sinaimg.cn/large/006tNc79jw1fazply7kkpj306v0ca0sp.jpg)
 
-### 参考
+对应xy的正向坐标为右下角。
 
-- [WWDC 2018 Keynote](https://developer.apple.com/videos/play/wwdc2018/101/)
-- [Apple WWDC 2018: what's new? All the announcements from the keynote](https://www.techradar.com/news/apple-wwdc-2018-keynote)
-- [iOS 加入「防沉迷」，macOS 有了暗色主题，今年的 WWDC 重点都在系统上](http://www.ifanr.com/1043270)
-- [苹果 WWDC 2018：最全总结看这里，不错过任何重点](https://sspai.com/post/44816)
- 
+#### 旋转
+
+```
+self.label.transform = CGAffineTransformRotate(self.label.transform, M_PI_2);
+NSLog(@"%@", NSStringFromCGAffineTransform( self.label.transform));
+```
+输出：
+
+```
+2016-12-22 17:59:43.680 手势[6667:1717130] [6.123233995736766e-17, 1, -1, 6.123233995736766e-17, 0, 0]
+```
+
+![](http://ww2.sinaimg.cn/large/006tNc79gw1fazq3j2ud5j306z0cfdft.jpg)
+
+可以看到`label`顺时针旋转了`π/2`弧度（90°）。
+
+# 手势结合变形
+---
+手势结合变形就是通过手势对控件变形处理。
+
+上代码：
+
+```
+#import "ViewController.h"
+
+@interface ViewController ()<UIGestureRecognizerDelegate>
+@property (weak, nonatomic) IBOutlet UIImageView *imageView;
+
+@end
+
+@implementation ViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+//    CGAffineTransform *mytransform = self.imageView.transform;
+    self.imageView.userInteractionEnabled = YES;
+    //1双击 恢复
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(tap:)];
+    tap.numberOfTapsRequired = 2;
+    tap.numberOfTouchesRequired = 1;
+    [self.imageView addGestureRecognizer:tap];
+    
+    //2拖拽
+    UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(pan:)];
+//    pan.delegate = self;
+    [self.imageView addGestureRecognizer:pan];
+    
+    //3捏合
+    UIPinchGestureRecognizer *pinch = [[UIPinchGestureRecognizer alloc]initWithTarget:self action:@selector(pinch:)];
+    pinch.delegate = self;
+    [self.imageView addGestureRecognizer:pinch];
+    
+    //4旋转
+    UIRotationGestureRecognizer *rotaion = [[UIRotationGestureRecognizer alloc]initWithTarget:self action:@selector(rotaion:)];
+//    pinch.delegate = self;
+    [self.imageView addGestureRecognizer:rotaion];
+    
+    // 长按
+    UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(longPress:)];
+    longPress.numberOfTapsRequired = 0;
+    longPress.minimumPressDuration = 1;
+//    longPress.allowableMovement = 3;
+    [self.imageView addGestureRecognizer:longPress];
+    
+}
+- (void)tap:(UITapGestureRecognizer *)sender{
+    
+    NSLog(@"tap！");
+    
+    //恢复
+    self.imageView.transform = CGAffineTransformIdentity;
+    
+}
+- (void)pan:(UIPanGestureRecognizer *)sender{
+//    CGPoint center = self.imageView.center;
+//    if (center.x < 0){
+//        center.x = 0;
+//    }else{
+//        center.x += [sender translationInView:self.view].x;
+//    }
+//    
+//    center.y += [sender translationInView:self.view].y;
+//    self.imageView.center = center;
+    //将相对偏移量清零
+//    [sender setTranslation:CGPointMake(0, 0) inView:self.view];
+    
+    self.imageView.transform = CGAffineTransformTranslate(self.imageView.transform, [sender translationInView:self.imageView].x, [sender translationInView:self.imageView].y);
+    [sender setTranslation:CGPointZero inView:self.view];
+    
+}
+
+- (void)pinch:(UIPinchGestureRecognizer *)sender{
+    
+    CGFloat  scale = sender.scale;
+    self.imageView.transform = CGAffineTransformScale(self.imageView.transform, scale, scale);
+    [sender setScale:1];
+   
+}
+
+- (void)rotaion:(UIRotationGestureRecognizer *)sender{
+    //获取旋转弧度
+    CGFloat rotation = sender.rotation;
+    self.imageView.transform = CGAffineTransformRotate(self.imageView.transform, rotation);
+    sender.rotation = 0;
+    
+//    self.imageView.transform = CGAffineTransformMakeRotation(sender.rotation);
+    
+}
+
+- (void)longPress:(UILongPressGestureRecognizer *)sender {
+    
+    NSLog(@"longPress:%@", sender);
+    
+    // 判断长按事件触发
+    if (sender.state == UIGestureRecognizerStateBegan) {
+        self.imageView.transform = CGAffineTransformMake(1, 0, 0, 1, 0, 0);
+    }
+    
+}
+
+
+//希望两个手势共存
+//遵守 UIGestureRecognizerDelegate 协议
+//实现方法 -(BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
+//将要同时实现的手势设置代理 pinch.delegate = self; pinch.delegate = self;
+
+-(BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer{
+    return YES;
+}
+
+```
+
+有几点需要注意：
+
+- 给本身没有交互功能的控件（）imagView, UIlabel, View等）添加手势，要设置`userInteractionEnabled`为**YES**，否则识别不了手势
+- 想要手势共存需要：
+	- 遵守 `UIGestureRecognizerDelegate` 协议
+	- 实现`-(BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer`方法，返回`YES`
+	- 将要同时实现的手势设置代理 `pinch.delegate = self`; `pinch.delegate = self`
+	
+# 在storyboard中添加手势
+
+在`storyboard`的控件栏中我们可以看到这些手势控件：
+
+![storyboard中的手势控件](http://ww1.sinaimg.cn/large/006tNc79gw1fb0j188yh1j30780evwfq.jpg)
+
+#### 使用方法：
+
+1. 直接将手势控件拖到要添加的视图上
+
+	![](http://ww3.sinaimg.cn/large/006tNc79gw1fb0ja1f8fnj30f206nwev.jpg)
+	
+2. 关联手势事件
+
+	![](http://ww2.sinaimg.cn/large/006tNc79gw1fb0jaxllv6j30ol0be77b.jpg)
+
+3. 设置手势属性
+
+	![](http://ww2.sinaimg.cn/large/006tNc79gw1fb0jc5mon3j307c06ydgd.jpg)
+	
+注意：若想同时识别多个手势，方法和上面相同，遵循协议，实现方法，设置代理，不过代理可以手动关联。
+
+![](http://ww4.sinaimg.cn/large/006tNc79gw1fb0jokip2vj30ej0aq3zz.jpg)
+
 
